@@ -18,24 +18,22 @@ NoDataFeed = "No data feed for train:"
 from settings import api_key
 
 def get_feedid(train):
-    if train in '123456':
-        return 1
-    elif train in 'ACEH':
-        return 26
+    if train in '1234567':
+        return ''
+    elif train in 'ACE':
+        return '-ace'
     elif train in 'NQRW':
-        return 16
+        return '-nqrw'
     elif train in 'BDFM':
-        return 21
+        return '-bdfm'
     elif train in 'L':
-        return 2
+        return '-l'
     elif train in 'G':
-        return 31
+        return '-g'
     elif train in 'JZ':
-        return 36
-    elif train in '7':
-        return 51
+        return '-jz'
     else:
-        raise (NoDataFeed + train)
+        raise Exception(NoDataFeed + train)
 def get_feedids(stations):
     lines = set(s[0] for s in stations)
     feeds = set(get_feedid(line) for line in lines)
@@ -52,12 +50,12 @@ def get_station_info():
 def get_data(feed_id):
     # Requests subway status data feed from City of New York MTA API
     feed = gtfs_realtime_pb2.FeedMessage()
-    logging.debug("Launching network request for feed {}".format(feed_id))
-    response = requests.get('http://datamine.mta.info/mta_esi.php?key={}&feed_id={}'.format(api_key, feed_id))
-    logging.debug("Received network result from feed {}".format(feed_id))
+    logging.debug("Launching network request for feed gtfs{}".format(feed_id))
+    response = requests.get(f'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs{feed_id}', headers={'x-api-key': api_key})
+    logging.debug("Received network result from feed gtfs{}".format(feed_id))
 
     feed.ParseFromString(response.content)
-    logging.debug("Parsed result from feed {}".format(feed_id))
+    logging.debug("Parsed result from feed gtfs{}".format(feed_id))
 
     # The MTA data feed uses the General Transit Feed Specification (GTFS) which
     # is based upon Google's "protocol buffer" data format. While possible to
