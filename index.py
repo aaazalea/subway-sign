@@ -55,13 +55,13 @@ def minutes(delta):
 
 class TrainDataHolder:
     def __init__(self):
-        self.train_data = None
+        self.train_data = []
         self.data_from = None
         self.in_progress_data = []
         self._lock = threading.Lock()
         self.show_north = True
         self.show_south = True
-        self.last_poked = 0
+        self.last_poked = datetime.now()
     
     def update_feed(self, feed_id):
         logging.debug("Fetching data for feed {}...".format(feed_id))
@@ -92,7 +92,7 @@ class TrainDataHolder:
     def process_data(self):
         logging.info("Processing data...")   
         ret = []
-        train_data = None
+        train_data = []
         with self._lock:
             train_data = copy.deepcopy(self.train_data)
         counts = {}
