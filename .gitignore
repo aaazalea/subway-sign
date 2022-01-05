@@ -3,3 +3,8 @@ settings.py
 # windows
 *~
 *.swp
+
+
+# python
+*.pyc
+__pycache__/
