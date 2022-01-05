@@ -6,11 +6,23 @@ import threading
 import logging
 import copy
 
+def setup_logging():
+    ifmt = "%(asctime)s: %(message)s"
+    logging.basicConfig(format=ifmt, level=logging.DEBUG,
+            datefmt="%H:%M:%S")
+
+if __name__ == '__main__':
+    setup_logging()
+    from sys import argv
+    if len(argv) > 1 and argv[1] == 'wait':
+        logging.info("Waiting 60 seconds to start to allow OS to fully boot...")
+        time.sleep(60)
+
 # local imports
 from switch import get_N, get_S
-from led import draw_row, matrix
+from led import draw_row, matrix, draw_ip
 from trains import get_feedids, get_station_info, get_data, station_time_lookup
-
+from ip import get_ip
 
 DEKALB = 'R30'
 NEVINS = '234'
@@ -49,6 +61,7 @@ class TrainDataHolder:
         self._lock = threading.Lock()
         self.show_north = True
         self.show_south = True
+        self.last_poked = 0
     
     def update_feed(self, feed_id):
         logging.debug("Fetching data for feed {}...".format(feed_id))
@@ -108,13 +121,29 @@ class TrainDataHolder:
 
     def display_loop(self):
         logging.info("Display loop start...")
+        matrix.Clear()
         while True:
+            now = datetime.now()
+            curr_hour = now.hour
+            brightness = 100
+            if curr_hour < 8 or curr_hour > 20:
+                brightness = 20
+                if (curr_hour > 22 or curr_hour < 8) and (now - self.last_poked).seconds > 180:
+                    matrix.Clear()
+                    time.sleep(0.5)
+                    continue
+            elif curr_hour > 18:
+                brightness = 50
+            matrix.brightness = brightness
+
             show_n = self.show_north
             show_s = self.show_south
             next_trains = self.process_data()
             n = len(next_trains) // 2
+            #logging.info("Last poked at {}".format(self.last_poked))
             logging.info("Showing {} trains...".format(len(next_trains)))
             for i in range(n):
+                matrix.Clear()
                 k1 = i*2
                 t1 = next_trains[k1]
                 k2 = i*2 + 1
@@ -122,31 +151,29 @@ class TrainDataHolder:
                 draw_row(matrix, num=k1+1, line=t1[0], express=False, direction=dest(t1[0],t1[2]), station=station_map[t1[1]], time=minutes(t1[3]))
                 draw_row(matrix, pos=1, num=k2+1, line=t2[0], express=False, direction=dest(t2[1], t2[2]), station=station_map[t2[1]], time=minutes(t2[3]))
                 time.sleep(3)
-                matrix.Clear()
                 if self.show_north != show_n or self.show_south != show_s:
                     break
 
     def switch_loop(self):
         while True:
+            prev_state = (self.show_north, self.show_south)
             self.show_north = get_N()
             self.show_south = get_S()
+            new_state = (self.show_north, self.show_south)
+            if (new_state != prev_state):
+                self.last_poked = datetime.now()
             time.sleep(0.1)
-
-def setup_logging():
-    ifmt = "%(asctime)s: %(message)s"
-    logging.basicConfig(format=ifmt, level=logging.DEBUG,
-            datefmt="%H:%M:%S")
 
 
   
-def run_main()
-    setup_logging()
+def run_main():
+    draw_ip(get_ip())
 
     tdh = TrainDataHolder()
     tdh.refresh_data()
     threading.Thread(target=tdh.refresh_loop).start()
     threading.Thread(target=tdh.display_loop).start()
-    threading.Thread(target-tdh.switch_loop).start()
+    threading.Thread(target=tdh.switch_loop).start()
 
 if __name__ == '__main__':
     run_main()

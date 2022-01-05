@@ -46,9 +46,9 @@ def make_numbers():
     
 
 def make_period():
-    image = Image.new("RGB", (1, 8))
+    image = Image.new("RGB", (1, 7))
     draw = ImageDraw.Draw(image)
-    draw.line((0,7,0,7), fill=WHITE)
+    draw.line((0,6,0,6), fill=WHITE)
     return image
 
 def make_letters():
@@ -221,9 +221,5 @@ def draw_ip(s):
         x += ct
         
             
-import signal
 
-def receiveSignal(signalNumber, frame):
-    matrix.Clear()
-signal.signal(signal.SIGTERM, receiveSignal)
 
