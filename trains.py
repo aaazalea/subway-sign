@@ -51,7 +51,7 @@ def get_data(feed_id):
     # Requests subway status data feed from City of New York MTA API
     feed = gtfs_realtime_pb2.FeedMessage()
     logging.debug("Launching network request for feed gtfs{}".format(feed_id))
-    response = requests.get(f'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs{feed_id}', headers={'x-api-key': api_key})
+    response = requests.get('https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs{}'.format(feed_id), headers={'x-api-key': api_key})
     logging.debug("Received network result from feed gtfs{}".format(feed_id))
 
     feed.ParseFromString(response.content)
